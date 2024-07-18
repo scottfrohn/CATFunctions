@@ -12,7 +12,7 @@ simulate_cat(
   min_se = 0.5,
   min_items = 0,
   response_consistency = 1,
-  mle_kludge = TRUE,
+  kludge = TRUE,
   silent = FALSE,
   optim_method = "CG"
 )
@@ -32,7 +32,7 @@ simulate_cat(
 
 \item{response_consistency}{Numeric. A multiplier for the item discrimination parameter to adjust response consistency. Default is 1.}
 
-\item{mle_kludge}{Logical. Whether to apply a kludge to the MLE estimation to prevent extreme ability estimates. Default is TRUE.}
+\item{kludge}{Logical. Whether to apply a kludge to the MLE estimation to prevent extreme ability estimates. Default is TRUE.}
 
 \item{silent}{Logical. Whether to print the case # after completing each simulated CAT. Default is FALSE.}
 

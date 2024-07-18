@@ -4,7 +4,7 @@
 \alias{est_ability_mle}
 \title{Maximum Likelihood Ability Estimation Function}
 \usage{
-est_ability_mle(responses, as, bs, cs, optim_method = "CG")
+est_ability_mle(responses, as, bs, cs, optim_method = "CG", kludge = TRUE)
 }
 \arguments{
 \item{responses}{Numeric vector. The observed item responses (0 or 1).}
@@ -16,6 +16,8 @@ est_ability_mle(responses, as, bs, cs, optim_method = "CG")
 \item{cs}{Numeric vector. The item guessing parameters.}
 
 \item{optim_method}{Character. The optimization method to be used in the \code{optim} function. Default is \code{"CG"}.}
+
+\item{kludge}{Logical. Whether to apply a kludge to the MLE estimation to prevent extreme ability estimates. Default is TRUE.}
 }
 \value{
 A list containing:
@@ -25,10 +27,13 @@ A list containing:
 }
 }
 \description{
-This function estimates the most likely ability level of an individual given item parameters and observed responses by maximizing the log-likelihood function.
+This function estimates the most likely ability level of an individual given item parameters and observed responses.
+It makes available the use of an adjustment factor aka "kludge" to adjust for response strings with zero variance to prevent extreme ability estimates early on in a Computerized Adaptive Test (CAT).
 }
 \details{
-The function calculates the ability estimate by maximizing the log-likelihood function using the \code{optim} function with the specified optimization method.
+The function calculates the ability estimate by maximizing the log-likelihood function using the \code{optim} function.
+An adjustment factor \eqn{\left(\frac{1}{3 \sqrt{n}}\right)} is applied to response strings with zero variance to prevent wild swings in ability estimates,
+where \eqn{n} is the number of responses. 
 The log-likelihood function is defined based on the probability of a correct response given the ability level and item parameters.
 }
 \examples{

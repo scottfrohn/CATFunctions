@@ -2,7 +2,6 @@
 
 export(check_lengths)
 export(est_ability_mle)
-export(est_ability_mle_kludge)
 export(generate_item_bank)
 export(initial_item)
 export(item_ICC_bank)

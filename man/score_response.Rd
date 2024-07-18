@@ -25,6 +25,8 @@ score_response(
 
 \item{item_type}{Character. The type of item. Default is "dich" for dichotomous scoring (either 1 or 0, no partial credit).}
 
+\item{kludge}{Logical. Whether to apply a kludge to the MLE estimation to prevent extreme ability estimates. Default is TRUE.}
+
 \item{optim_method}{Character. The optimization method to be used in the \code{optim} function. Default is \code{"CG"}.}
 }
 \value{
@@ -70,5 +72,5 @@ print(result)
 
 }
 \seealso{
-\code{est_ability_mle} and \code{est_ability_mle_kludge} for estimating ability.
+\code{est_ability_mle} for estimating ability.
 }
