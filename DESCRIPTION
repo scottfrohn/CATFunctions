@@ -1,0 +1,9 @@
+Package: CATFunctions
+Type: Package
+Title: Functions for Computerized Adaptive Testing
+Version: 0.1.0
+Author: Scott Frohn
+Maintainer: Scott Frohn <scottfrohn@gmail.com>
+Description: Provides functions for simple Computerized Adaptive Testing simulations.
+License: MIT
+RoxygenNote: 7.3.2
