@@ -1,6 +1,3 @@
-# library(tidyverse)
-# library(lubridate)
-
 #' Generate Item Bank
 #'
 #' This function generates an item bank with specified parameters for different IRT models.
@@ -263,16 +260,17 @@ check_lengths <- function(...) {
   all(lengths == lengths[1])
 }
 
-#' Maximum Likelihood Ability Estimation Function (with Kludge)
+#' Maximum Likelihood Ability Estimation Function
 #'
 #' This function estimates the most likely ability level of an individual given item parameters and observed responses.
-#' It uses an adjustment factor aka "kludge" to adjust for response strings with zero variance to prevent extreme ability estimates early on in a Computerized Adaptive Test (CAT).
+#' It makes available the use of an adjustment factor aka "kludge" to adjust for response strings with zero variance to prevent extreme ability estimates early on in a Computerized Adaptive Test (CAT).
 #'
 #' @param responses Numeric vector. The observed item responses (0 or 1).
 #' @param as Numeric vector. The item discrimination parameters.
 #' @param bs Numeric vector. The item difficulty parameters.
 #' @param cs Numeric vector. The item guessing parameters.
 #' @param optim_method Character. The optimization method to be used in the \code{optim} function. Default is \code{"CG"}.
+#' @param kludge Logical. Whether to apply a kludge to the MLE estimation to prevent extreme ability estimates. Default is TRUE.
 #'
 #' @return A list containing:
 #' \describe{
@@ -291,13 +289,13 @@ check_lengths <- function(...) {
 #' as <- c(1.2, 1.0, 0.8, 1.1, 0.9)
 #' bs <- c(-1, 0, 1, 2, -0.5)
 #' cs <- c(0.2, 0.25, 0.15, 0.3, 0.1)
-#' result <- est_ability_mle_kludge(responses, as, bs, cs)
+#' result <- est_ability_mle(responses, as, bs, cs)
 #' print(result)
 #'
 #' @seealso \code{check_lengths} for checking the lengths of input vectors, \code{prob} for calculating response probabilities.
 #'
 #' @export
-est_ability_mle_kludge <- function(responses, as, bs, cs, optim_method = "CG") {
+est_ability_mle <- function(responses, as, bs, cs, optim_method = "CG", kludge = TRUE) {
   
   # Confirm equal lengths
   if (!check_lengths(responses, as, bs, cs)) {
@@ -311,15 +309,18 @@ est_ability_mle_kludge <- function(responses, as, bs, cs, optim_method = "CG") {
   cs <- cs[valid_indices]
   responses <- responses[valid_indices]
   
-  # Create an adjustment factor (kludge) for response strings with zero variance
-  adjustment_factor <- (1 / (3 * sqrt(length(responses))))
+  if(kludge == TRUE) {
   
-  # Adjust responses for perfect or zero scores
-  if (mean(responses) == 1) {
-    responses <- responses - adjustment_factor
-  } else if (mean(responses) == 0) {
-    responses <- responses + adjustment_factor
-  }
+    # Create an adjustment factor (kludge) for response strings with zero variance
+    adjustment_factor <- (1 / (3 * sqrt(length(responses))))
+  
+      # Adjust responses for perfect or zero scores
+      if (mean(responses) == 1) {
+        responses <- responses - adjustment_factor
+      } else if (mean(responses) == 0) {
+        responses <- responses + adjustment_factor
+      }
+    }
   
   # The log likelihood function
   logLik <- function(theta) {
@@ -346,76 +347,6 @@ est_ability_mle_kludge <- function(responses, as, bs, cs, optim_method = "CG") {
   list(ability_est = theta_hat, ability_est_se = se)
 }
 
-#' Maximum Likelihood Ability Estimation Function
-#'
-#' This function estimates the most likely ability level of an individual given item parameters and observed responses by maximizing the log-likelihood function.
-#'
-#' @param responses Numeric vector. The observed item responses (0 or 1).
-#' @param as Numeric vector. The item discrimination parameters.
-#' @param bs Numeric vector. The item difficulty parameters.
-#' @param cs Numeric vector. The item guessing parameters.
-#' @param optim_method Character. The optimization method to be used in the \code{optim} function. Default is \code{"CG"}.
-#
-#'
-#' @return A list containing:
-#' \describe{
-#'   \item{ability_est}{The estimated ability level.}
-#'   \item{ability_est_se}{The standard error of the ability estimate.}
-#' }
-#'
-#' @details The function calculates the ability estimate by maximizing the log-likelihood function using the \code{optim} function with the specified optimization method.
-#' The log-likelihood function is defined based on the probability of a correct response given the ability level and item parameters.
-#'
-#' @examples
-#' # Example usage
-#' responses <- c(1, 0, 1, 1, 0)
-#' as <- c(1.2, 1.0, 0.8, 1.1, 0.9)
-#' bs <- c(-1, 0, 1, 2, -0.5)
-#' cs <- c(0.2, 0.25, 0.15, 0.3, 0.1)
-#' result <- est_ability_mle(responses, as, bs, cs)
-#' print(result)
-#'
-#' @seealso \code{check_lengths} for checking the lengths of input vectors, \code{prob} for calculating response probabilities.
-#'
-#' @export
-est_ability_mle <- function(responses, as, bs, cs, optim_method = "CG") {
-  
-  # Confirm equal lengths
-  if (!check_lengths(responses, as, bs, cs)) {
-    stop("Error: Input vectors must have the same length.")
-  }
-  
-  # Remove item params and responses where response == NA
-  valid_indices <- !is.na(responses)
-  as <- as[valid_indices]
-  bs <- bs[valid_indices]
-  cs <- cs[valid_indices]
-  responses <- responses[valid_indices]
-  
-  # The log likelihood function
-  logLik <- function(theta) {
-    p <- prob(theta, as, bs, cs)
-    sum(responses * log(p) + (1 - responses) * log(1 - p))
-  }
-  
-  # Run an optimization to find max likelihood
-  optim_result <- optim(par = 0, fn = logLik, method = optim_method, control = list(fnscale = -1))
-  
-  # Get the theta value with the max likelihood 
-  theta_hat <- optim_result$par
-  
-  # Function to calculate the information matrix for standard error
-  information_matrix <- function(theta) {
-    p <- prob(theta, as, bs, cs)
-    q <- 1 - p
-    sum(as^2 * p * q)
-  }
-  
-  info_value <- information_matrix(theta_hat)
-  se <- sqrt(1 / info_value)
-  
-  list(ability_est = theta_hat, ability_est_se = se)
-}
 
 #' Select the Initial Item for CAT
 #'
@@ -555,6 +486,7 @@ next_item <- function(eligible_items_df, test_event_df) {
 #' @param key Integer. The correct response for the item. Default is 1.
 #' @param item_type Character. The type of item. Default is "dich" for dichotomous scoring (either 1 or 0, no partial credit).
 #' @param optim_method Character. The optimization method to be used in the \code{optim} function. Default is \code{"CG"}.
+#' @param kludge Logical. Whether to apply a kludge to the MLE estimation to prevent extreme ability estimates. Default is TRUE.
 #' 
 #' @return A data frame containing the updated test event table with the scored response and updated ability estimate.
 #'
@@ -592,7 +524,7 @@ next_item <- function(eligible_items_df, test_event_df) {
 #' result <- score_response(test_event_df, item_id = 1, response = 1)
 #' print(result)
 #'
-#' @seealso \code{est_ability_mle} and \code{est_ability_mle_kludge} for estimating ability.
+#' @seealso \code{est_ability_mle} for estimating ability.
 #'
 #' @export
 score_response <- function(test_event_df, item_id, response, key = 1, item_type = "dich", kludge = TRUE, optim_method = "CG") {
@@ -611,11 +543,7 @@ score_response <- function(test_event_df, item_id, response, key = 1, item_type 
   test_event_df$response_ts[idx] <- Sys.time()
   
   # Estimate ability
-  if(kludge == TRUE) {
-  current_ability_ls <- est_ability_mle_kludge(test_event_df$response_score, test_event_df$a, test_event_df$b, test_event_df$c, optim_method = optim_method)
-  } else {
-    current_ability_ls <- est_ability_mle(test_event_df$response_score, test_event_df$a, test_event_df$b, test_event_df$c, optim_method = optim_method)
-  }
+  current_ability_ls <- est_ability_mle(test_event_df$response_score, test_event_df$a, test_event_df$b, test_event_df$c, optim_method = optim_method, kludge = kludge)
   
   # Update the test event table with the current ability estimate and its SE
   test_event_df$current_ability[idx] <- current_ability_ls$ability_est
@@ -789,7 +717,7 @@ test_info <- function(thetas, as, bs, cs) {
 #' @param min_se Numeric. The minimum standard error stopping criterion. Default is 0.5.
 #' @param min_items Integer. The minimum number of items to be administered before considering other stopping criteria. Default is NULL.
 #' @param response_consistency Numeric. A multiplier for the item discrimination parameter to adjust response consistency. Default is 1.
-#' @param mle_kludge Logical. Whether to apply a kludge to the MLE estimation to prevent extreme ability estimates. Default is TRUE.
+#' @param kludge Logical. Whether to apply a kludge to the MLE estimation to prevent extreme ability estimates. Default is TRUE.
 #' @param silent Logical. Whether to print the case # after completing each simulated CAT. Default is FALSE.
 #' @param optim_method Character. The optimization method to be used in the \code{optim} function. Default is \code{"CG"}.
 #'
@@ -814,7 +742,7 @@ test_info <- function(thetas, as, bs, cs) {
 #' print(result)
 #'
 #' @export
-simulate_cat <- function(item_bank, abilities, seed = 123, max_items = 20, min_se = 0.5, min_items = 0, response_consistency = 1, mle_kludge = TRUE, silent = FALSE, optim_method = "CG") {
+simulate_cat <- function(item_bank, abilities, seed = 123, max_items = 20, min_se = 0.5, min_items = 0, response_consistency = 1, kludge = TRUE, silent = FALSE, optim_method = "CG") {
   set.seed(seed)
   
   if (response_consistency < 0) {
@@ -838,7 +766,7 @@ simulate_cat <- function(item_bank, abilities, seed = 123, max_items = 20, min_s
     answer <- rbinom(1, 1, prob(abilities[i], a * response_consistency, b, c))
     
     # Score response
-    test_event <- score_response(test_event, test_event$item_id[nrow(test_event)], answer, kludge = mle_kludge, optim_method = optim_method)
+    test_event <- score_response(test_event, test_event$item_id[nrow(test_event)], answer, kludge = kludge, optim_method = optim_method)
     
     while (!stop_test(test_event_df = test_event, max_items = max_items, min_se = min_se, min_items = min_items)) {
       # Update Eligible items
@@ -857,7 +785,7 @@ simulate_cat <- function(item_bank, abilities, seed = 123, max_items = 20, min_s
       answer <- rbinom(1, 1, item_prob)
       
       # Score response
-      test_event <- score_response(test_event, test_event$item_id[nrow(test_event)], answer, kludge = mle_kludge, optim_method = optim_method)
+      test_event <- score_response(test_event, test_event$item_id[nrow(test_event)], answer, kludge = kludge, optim_method = optim_method)
     }
     
     # Once the loop is finished
