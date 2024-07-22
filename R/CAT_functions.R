@@ -7,6 +7,7 @@
 #' @param a_params Numeric vector. The parameters for generating the item discrimination (a) values. Default is \code{c(0.1, 0.2)}.
 #' @param b_params Numeric vector. The parameters for generating the item difficulty (b) values. Default is \code{c(0, 1.5)}.
 #' @param c_params Numeric vector. The parameters for generating the item guessing (c) values. Default is \code{c(0, 0.3)}.
+#' @param seed Integer. The random seed for reproducibility. Default is NULL.
 #'
 #' @return A data frame containing the generated item bank with columns: `item_id`, `a`, `b`, `c`.
 #'
@@ -24,10 +25,16 @@
 #' print(item_bank)
 #'
 #' @export
-generate_item_bank <- function(n_items, model = "3pl",
+generate_item_bank <- function(n_items, 
+                               model = "3pl",
                                a_params = c(0.1, 0.2),
                                b_params = c(0, 1.5),
-                               c_params = c(0, 0.3)) {
+                               c_params = c(0, 0.3),
+                               seed = NULL) {
+  
+  if(!is.null(seed) ) {
+    set.seed(seed)
+  }
   
   if(round(n_items, 0) != n_items) {
     stop("n_items must be an integer")
@@ -60,6 +67,7 @@ generate_item_bank <- function(n_items, model = "3pl",
   bank <- data.frame(item_id = 1:n_items, a = a, b = b, c = c)
   
   return(bank)
+  set.seed(NULL)
 }
 
 
@@ -712,11 +720,10 @@ test_info <- function(thetas, as, bs, cs) {
 #'
 #' @param item_bank Data frame. The item bank containing the parameters of the items. It should have columns: `item_id`, `a`, `b`, `c`.
 #' @param abilities Numeric vector. The true ability levels of the test takers.
-#' @param seed Integer. The random seed for reproducibility. Default is 123.
+#' @param seed Integer. The random seed for reproducibility. Default is NULL.
 #' @param max_items Integer. The maximum number of items to be administered. Default is 20.
 #' @param min_se Numeric. The minimum standard error stopping criterion. Default is 0.5.
 #' @param min_items Integer. The minimum number of items to be administered before considering other stopping criteria. Default is NULL.
-#' @param response_consistency Numeric. A multiplier for the item discrimination parameter to adjust response consistency. Default is 1.
 #' @param kludge Logical. Whether to apply a kludge to the MLE estimation to prevent extreme ability estimates. Default is TRUE.
 #' @param silent Logical. Whether to print the case # after completing each simulated CAT. Default is FALSE.
 #' @param optim_method Character. The optimization method to be used in the \code{optim} function. Default is \code{"CG"}.
@@ -742,12 +749,12 @@ test_info <- function(thetas, as, bs, cs) {
 #' print(result)
 #'
 #' @export
-simulate_cat <- function(item_bank, abilities, seed = 123, max_items = 20, min_se = 0.5, min_items = 0, response_consistency = 1, kludge = TRUE, silent = FALSE, optim_method = "CG") {
-  set.seed(seed)
-  
-  if (response_consistency < 0) {
-    warning("response_consistency must be greater than 0")
+simulate_cat <- function(item_bank, abilities, seed = NULL, max_items = 20, min_se = 0.5, min_items = 0,kludge = TRUE, silent = FALSE, optim_method = "CG") {
+
+    if(!is.null(seed) ) {
+      set.seed(seed)
   }
+  
   if (max_items < min_items) {
     warning("max_items must be greater than or equal to min_items")
   }
@@ -763,7 +770,7 @@ simulate_cat <- function(item_bank, abilities, seed = 123, max_items = 20, min_s
     c <- test_event$c[nrow(test_event)]
     
     # Select the answer from a distribution of probabilities based on item parameters.
-    answer <- rbinom(1, 1, prob(abilities[i], a * response_consistency, b, c))
+    answer <- rbinom(1, 1, prob(abilities[i], a, b, c))
     
     # Score response
     test_event <- score_response(test_event, test_event$item_id[nrow(test_event)], answer, kludge = kludge, optim_method = optim_method)
@@ -781,7 +788,7 @@ simulate_cat <- function(item_bank, abilities, seed = 123, max_items = 20, min_s
       c <- test_event$c[nrow(test_event)]
       
       # Select the answer from a probability distribution of probabilities based on item parameters.
-      item_prob <- prob(abilities[i], a * response_consistency, b, c)
+      item_prob <- prob(abilities[i], a, b, c)
       answer <- rbinom(1, 1, item_prob)
       
       # Score response
@@ -821,4 +828,5 @@ simulate_cat <- function(item_bank, abilities, seed = 123, max_items = 20, min_s
       "event" = master_test_event
     )
   )
+    set.seed(NULL)
 }

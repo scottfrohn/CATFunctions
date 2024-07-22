@@ -7,11 +7,10 @@
 simulate_cat(
   item_bank,
   abilities,
-  seed = 123,
+  seed = NULL,
   max_items = 20,
   min_se = 0.5,
   min_items = 0,
-  response_consistency = 1,
   kludge = TRUE,
   silent = FALSE,
   optim_method = "CG"
@@ -22,15 +21,13 @@ simulate_cat(
 
 \item{abilities}{Numeric vector. The true ability levels of the test takers.}
 
-\item{seed}{Integer. The random seed for reproducibility. Default is 123.}
+\item{seed}{Integer. The random seed for reproducibility. Default is NULL.}
 
 \item{max_items}{Integer. The maximum number of items to be administered. Default is 20.}
 
 \item{min_se}{Numeric. The minimum standard error stopping criterion. Default is 0.5.}
 
 \item{min_items}{Integer. The minimum number of items to be administered before considering other stopping criteria. Default is NULL.}
-
-\item{response_consistency}{Numeric. A multiplier for the item discrimination parameter to adjust response consistency. Default is 1.}
 
 \item{kludge}{Logical. Whether to apply a kludge to the MLE estimation to prevent extreme ability estimates. Default is TRUE.}
 

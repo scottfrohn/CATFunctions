@@ -9,7 +9,8 @@ generate_item_bank(
   model = "3pl",
   a_params = c(0.1, 0.2),
   b_params = c(0, 1.5),
-  c_params = c(0, 0.3)
+  c_params = c(0, 0.3),
+  seed = NULL
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ generate_item_bank(
 \item{b_params}{Numeric vector. The parameters for generating the item difficulty (b) values. Default is \code{c(0, 1.5)}.}
 
 \item{c_params}{Numeric vector. The parameters for generating the item guessing (c) values. Default is \code{c(0, 0.3)}.}
+
+\item{seed}{Integer. The random seed for reproducibility. Default is NULL.}
 }
 \value{
 A data frame containing the generated item bank with columns: `item_id`, `a`, `b`, `c`.
